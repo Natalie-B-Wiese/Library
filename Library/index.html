@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library</title>
+</head>
+<body>
+    <div id="book-container"></div>
+
+    <button command="show-modal" commandfor="new-book-modal">New Book</button>
+
+    <dialog id="new-book-modal">
+        <form method="POST">
+            <label for="book-title">Title:</label><br>
+            <input type="text" id="book-title" name="book-title"><br>
+
+            <label for="book-author">Author:</label><br>
+            <input type="text" id="book-author" name="book-author"><br>
+
+            <label for="book-length">Pages:</label><br>
+            <input type="number" id="book-length" name="book-length"><br>
+
+            <input type="checkbox" id="was-read" name="was-read" value="read">
+            <label for="was-read">Read?</label><br>
+
+            <input type="submit" value="Submit">
+
+        </form>
+
+        <button commandfor="new-book-modal" command="close">Close</button>
+    </dialog>
+
+</body>
+
+<script src="library.js"></script>
+</html>
