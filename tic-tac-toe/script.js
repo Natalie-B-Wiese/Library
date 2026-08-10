@@ -1,6 +1,6 @@
 console.log("JS connected!");
 
-const GameController = (() => {
+export const GameController = (() => {
     function _createPlayer(name, symbol) {
         return {name: name, symbol: symbol}
     }
@@ -96,16 +96,10 @@ const GameController = (() => {
 
     return {
         playRound,
-        getActivePlayer
+        getActivePlayer,
+        getBoard: board.getBoard
     }
 
 })();
-
-GameController.playRound(0, 0);
-
-// this does nothing since the cell is already occuppied
-GameController.playRound(0, 0);
-
-GameController.playRound(1, 0);
 
 // If you only need a single instance of something (e.g. the gameboard, the displayController etc.) then wrap the factory inside an IIFE (module pattern) so it cannot be reused to create additional instances.
