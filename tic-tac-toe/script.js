@@ -115,8 +115,16 @@ export const GameController = (() => {
             return _rowsWinner() || _columnsWinner() || _positiveDiagonalWinner() || _negativeDiagonalWinner();
         }
 
+        function _isFull() {
+            return board.flat().every(cell => cell.isFull()); 
+        }
+
+        function isGameOver() {
+            return _isFull() || !!winner();
+        }
+
         function _tileEmpty(column, row) {
-            return board[row][column].getPlayer() == null;
+            return !board[row][column].isFull();
         }
 
         function tryPlacePlayer(column, row, player) {
@@ -149,10 +157,14 @@ export const GameController = (() => {
                 player = newPlayer;
             }
 
-            return { setPlayer, getPlayer };
+            const isFull = () => {
+                return player!=null;
+            }
+
+            return { setPlayer, getPlayer, isFull };
         }
 
-        return { getBoard, printBoard, tryPlacePlayer, winner };
+        return { getBoard, printBoard, tryPlacePlayer, winner, isGameOver };
 
     })();
 
@@ -194,7 +206,8 @@ export const GameController = (() => {
 
         //used by tests:
         getBoard: board.getBoard,
-        winner: board.winner
+        winner: board.winner,
+        isGameOver: board.isGameOver
     }
 
 })();

@@ -146,3 +146,46 @@ describe("GameController.winner", () => {
         expect(GameController.winner()).toBe(playerTwo);
     });
 });
+
+describe("GameController.isGameOver", () => {
+    it("returns false when the board is empty", () => {
+        expect(GameController.isGameOver()).toBe(false);
+    });
+
+    it("returns false when only some cells are occupied and no one has won", () => {
+        GameController.playRound(0, 0);
+        GameController.playRound(1, 0);
+
+        expect(GameController.isGameOver()).toBe(false);
+    });
+
+    it("returns true when a player has won before the board is full", () => {
+        const topRow = 0;
+        const leftColumn = 0;
+        const middleColumn = 1;
+        const rightColumn = 2;
+        const otherRow = 1;
+
+        GameController.playRound(leftColumn, topRow); // playerOne
+        GameController.playRound(leftColumn, otherRow); // playerTwo
+        GameController.playRound(middleColumn, topRow); // playerOne
+        GameController.playRound(middleColumn, otherRow); // playerTwo
+        GameController.playRound(rightColumn, topRow); // playerOne completes the top row
+
+        expect(GameController.isGameOver()).toBe(true);
+    });
+
+    it("returns true when every cell is occupied even without a winner", () => {
+        GameController.playRound(0, 0); // playerOne
+        GameController.playRound(1, 0); // playerTwo
+        GameController.playRound(2, 0); // playerOne
+        GameController.playRound(1, 1); // playerTwo
+        GameController.playRound(0, 1); // playerOne
+        GameController.playRound(2, 1); // playerTwo
+        GameController.playRound(1, 2); // playerOne
+        GameController.playRound(0, 2); // playerTwo
+        GameController.playRound(2, 2); // playerOne
+
+        expect(GameController.isGameOver()).toBe(true);
+    });
+});
