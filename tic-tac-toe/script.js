@@ -21,6 +21,100 @@ export const GameController = (() => {
             }
         }
 
+        // returns a player if the player has won in the row, otherwise returns nil
+        function _rowWinner(row) {
+            let rowWinner=board[row][0].getPlayer();
+
+            for (let col=1; col<columns; col++) {
+                if (rowWinner!=board[row][col].getPlayer()) { return null; }
+
+                rowWinner=board[row][col].getPlayer();
+            }
+
+            return rowWinner;
+        }
+
+        // returns a player if the player has won in the column, otherwise returns nil
+        function _columnWinner(column) {
+            let columnWinner=board[0][column].getPlayer();
+
+            for (let row=1; row<rows; row++) {
+                if (columnWinner!=board[row][column].getPlayer()) { return null; }
+
+                columnWinner=board[row][column].getPlayer();
+            }
+
+            return columnWinner;
+        }
+
+        /* returns a winner if a player has completed a row */
+        function _rowsWinner() {
+            let currentRowWinner;
+
+            for (let row=0; row<rows; row++) {
+                currentRowWinner=_rowWinner(row);
+                if (currentRowWinner!=null) {return currentRowWinner;}
+            }
+
+            return null;
+        }
+
+        /* returns a winner if a player has completed a column */
+        function _columnsWinner() {
+            let currentColWinner;
+
+            for (let col=0; col<columns; col++) {
+                currentColWinner=_columnWinner(col);
+                if (currentColWinner!=null) {return currentColWinner;}
+            }
+
+            return null;
+        }
+
+        // top left to bottom right (negative slope)
+        function _negativeDiagonalWinner() {
+            let row=rows-1;
+            let column=0;
+            let currentDiagonalWinner=board[row][column].getPlayer();
+
+            // there are the same number of rows as columns
+            for (let i=1; i<rows; i++) {
+                row-=1;
+                column+=1;
+
+                if (currentDiagonalWinner!=board[row][column].getPlayer()) { return null; }
+
+                currentDiagonalWinner=board[row][column].getPlayer();
+            }
+
+            return currentDiagonalWinner;
+
+        }
+
+        // bottom left to top right (positive slope)
+        function _positiveDiagonalWinner() {
+            let row=0;
+            let column=0;
+            let currentDiagonalWinner=board[row][column].getPlayer();
+
+            // there are the same number of rows as columns
+            for (let i=1; i<rows; i++) {
+                row+=1;
+                column+=1;
+                
+                if (currentDiagonalWinner!=board[row][column].getPlayer()) { return null; }
+
+                currentDiagonalWinner=board[row][column].getPlayer();
+            }
+
+            return currentDiagonalWinner;
+
+        }
+
+        function winner() {
+            return _rowsWinner() || _columnsWinner() || _positiveDiagonalWinner() || _negativeDiagonalWinner();
+        }
+
         function _tileEmpty(column, row) {
             return board[row][column].getPlayer() == null;
         }
@@ -58,7 +152,7 @@ export const GameController = (() => {
             return { setPlayer, getPlayer };
         }
 
-        return { getBoard, printBoard, tryPlacePlayer };
+        return { getBoard, printBoard, tryPlacePlayer, winner };
 
     })();
 
@@ -97,7 +191,10 @@ export const GameController = (() => {
     return {
         playRound,
         getActivePlayer,
-        getBoard: board.getBoard
+
+        //used by tests:
+        getBoard: board.getBoard,
+        winner: board.winner
     }
 
 })();
