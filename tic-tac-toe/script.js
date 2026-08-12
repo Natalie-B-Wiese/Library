@@ -248,6 +248,11 @@ export const DisplayController = (() => {
                 cellButton.dataset.column = columnIndex;
                 cellButton.dataset.row = rowIndex;
 
+                if (cell.isFull())
+                {
+                    cellButton.disabled=true;
+                }
+
                 cellButton.textContent = cell.getSymbol();
                 boardDiv.appendChild(cellButton);
             });
