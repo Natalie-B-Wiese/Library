@@ -1,9 +1,17 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
+import { readFileSync } from "node:fs";
+import path from "node:path";
+
+const indexHtmlPath = path.resolve(process.cwd(), "index.html");
 
 let GameController;
 
 beforeEach(async () => {
     vi.resetModules();
+
+    const indexHtml = readFileSync(indexHtmlPath, "utf-8");
+    document.body.innerHTML = indexHtml.match(/<body[^>]*>([\s\S]*)<\/body>/)[1];
+
     ({ GameController } = await import("./script.js"));
 });
 
@@ -144,6 +152,40 @@ describe("GameController.winner", () => {
         GameController.playRound(rightColumn, topRow); // playerTwo completes the top row
 
         expect(GameController.winner()).toBe(playerTwo);
+    });
+});
+
+describe("Cell.getSymbol", () => {
+    it("returns '' when the cell has no player", () => {
+        const column = 0;
+        const row = 0;
+
+        expect(GameController.getBoard()[row][column].getSymbol()).toBe("");
+    });
+
+    it("returns 'X' when the cell's player has the 'X' symbol", () => {
+        const column = 0;
+        const row = 0;
+        const startingPlayer = GameController.getActivePlayer();
+
+        GameController.playRound(column, row);
+
+        expect(startingPlayer.symbol).toBe("X");
+        expect(GameController.getBoard()[row][column].getSymbol()).toBe("X");
+    });
+
+    it("returns 'O' when the cell's player has the 'O' symbol", () => {
+        const firstColumn = 0;
+        const firstRow = 0;
+        const secondColumn = 1;
+        const secondRow = 0;
+
+        GameController.playRound(firstColumn, firstRow); // playerOne (X)
+        const secondPlayer = GameController.getActivePlayer();
+        GameController.playRound(secondColumn, secondRow); // playerTwo (O)
+
+        expect(secondPlayer.symbol).toBe("O");
+        expect(GameController.getBoard()[secondRow][secondColumn].getSymbol()).toBe("O");
     });
 });
 

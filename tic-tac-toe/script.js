@@ -1,5 +1,6 @@
 console.log("JS connected!");
 
+
 export const GameController = (() => {
     function _createPlayer(name, symbol) {
         return {name: name, symbol: symbol}
@@ -101,7 +102,7 @@ export const GameController = (() => {
             for (let i=1; i<rows; i++) {
                 row+=1;
                 column+=1;
-                
+
                 if (currentDiagonalWinner!=board[row][column].getPlayer()) { return null; }
 
                 currentDiagonalWinner=board[row][column].getPlayer();
@@ -116,7 +117,7 @@ export const GameController = (() => {
         }
 
         function _isFull() {
-            return board.flat().every(cell => cell.isFull()); 
+            return board.flat().every(cell => cell.isFull());
         }
 
         function isGameOver() {
@@ -139,12 +140,16 @@ export const GameController = (() => {
             }
         }
 
-        const printBoard=() => {
-            const boardWithCellValues = board.map((row) =>
+        function to_s()
+        {
+            return board.map((row) =>
                 row.map((cell) =>
-                    cell.getPlayer() ? cell.getPlayer().symbol : ' ')
+                    cell.getSymbol())
             );
-            console.log(boardWithCellValues);
+        }
+
+        const printBoard=() => {
+            console.log(to_s());
         }
 
         function Cell()
@@ -152,6 +157,10 @@ export const GameController = (() => {
             let player=null;
 
             const getPlayer = () => player;
+
+            const getSymbol = () => {
+                return isFull() ? player.symbol : '';
+            }
 
             function setPlayer(newPlayer) {
                 player = newPlayer;
@@ -161,7 +170,7 @@ export const GameController = (() => {
                 return player!=null;
             }
 
-            return { setPlayer, getPlayer, isFull };
+            return { setPlayer, getPlayer, isFull, getSymbol };
         }
 
         return { getBoard, printBoard, tryPlacePlayer, winner, isGameOver };
@@ -188,10 +197,10 @@ export const GameController = (() => {
         console.log(
             `Placing ${getActivePlayer().symbol} into column ${column} row ${row}...`
         );
-        
+
         if (!board.tryPlacePlayer(column, row, getActivePlayer())) { return; }
 
-        /*  This is where we would check for a winner and handle that logic,
+        /*  TODO: This is where we would check for a winner and handle that logic,
             such as a win message. */
 
         // Switch player turn
@@ -203,13 +212,62 @@ export const GameController = (() => {
     return {
         playRound,
         getActivePlayer,
+        winner: board.winner,
+        isGameOver: board.isGameOver,
 
         //used by tests:
-        getBoard: board.getBoard,
-        winner: board.winner,
-        isGameOver: board.isGameOver
+        getBoard: board.getBoard
     }
 
 })();
 
-// If you only need a single instance of something (e.g. the gameboard, the displayController etc.) then wrap the factory inside an IIFE (module pattern) so it cannot be reused to create additional instances.
+export const DisplayController = (() => {
+    const playerTurnDiv = document.querySelector("#turn");
+    const boardDiv = document.querySelector("#board");
+
+    const updateScreen = () => {
+        // clear the board
+        boardDiv.textContent = "";
+
+        // get the newest version of the board and player turn
+        const board = GameController.getBoard();
+        const activePlayer = GameController.getActivePlayer();
+
+        // Display player's turn
+        playerTurnDiv.textContent = `${activePlayer.name}'s turn...`;
+
+        // Render board squares
+        board.forEach((row, rowIndex) => {
+            row.forEach((cell, columnIndex) => {
+                // Anything clickable should be a button!!
+                const cellButton = document.createElement("button");
+                cellButton.classList.add("cell");
+
+                // Create a data attribute to identify the column
+                // This makes it easier to pass into our `playRound` function
+                cellButton.dataset.column = columnIndex;
+                cellButton.dataset.row = rowIndex;
+
+                cellButton.textContent = cell.getSymbol();
+                boardDiv.appendChild(cellButton);
+            });
+        });
+    };
+
+    // Add event listener for the board
+    function clickHandlerBoard(e) {
+        const selectedColumn = e.target.dataset.column;
+        const selectedRow = e.target.dataset.row;
+
+        // Make sure I've clicked a cell and not the gaps in between
+        if (!selectedColumn || !selectedRow) return;
+
+        GameController.playRound(selectedColumn, selectedRow);
+        updateScreen();
+    }
+    boardDiv.addEventListener("click", clickHandlerBoard);
+
+    // Initial render
+    updateScreen();
+
+})();
