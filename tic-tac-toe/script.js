@@ -24,28 +24,38 @@ export const GameController = (() => {
 
         // returns a player if the player has won in the row, otherwise returns nil
         function _rowWinner(row) {
+            let tiles=[]
+            tiles.push([row, 0])
+
             let rowWinner=board[row][0].getPlayer();
+            if (rowWinner==null) { return null; }
 
             for (let col=1; col<columns; col++) {
                 if (rowWinner!=board[row][col].getPlayer()) { return null; }
 
                 rowWinner=board[row][col].getPlayer();
+                tiles.push([row, col]);
             }
 
-            return rowWinner;
+            return tiles;
         }
 
         // returns a player if the player has won in the column, otherwise returns nil
         function _columnWinner(column) {
+            let tiles=[]
+            tiles.push([0, column])
+
             let columnWinner=board[0][column].getPlayer();
+            if (columnWinner==null) { return null; }
 
             for (let row=1; row<rows; row++) {
                 if (columnWinner!=board[row][column].getPlayer()) { return null; }
 
                 columnWinner=board[row][column].getPlayer();
+                tiles.push([row, column]);
             }
 
-            return columnWinner;
+            return tiles;
         }
 
         /* returns a winner if a player has completed a row */
@@ -76,7 +86,12 @@ export const GameController = (() => {
         function _negativeDiagonalWinner() {
             let row=rows-1;
             let column=0;
+
+            let tiles=[]
+            tiles.push([row, column])
+
             let currentDiagonalWinner=board[row][column].getPlayer();
+            if (currentDiagonalWinner==null) { return null; }
 
             // there are the same number of rows as columns
             for (let i=1; i<rows; i++) {
@@ -86,9 +101,10 @@ export const GameController = (() => {
                 if (currentDiagonalWinner!=board[row][column].getPlayer()) { return null; }
 
                 currentDiagonalWinner=board[row][column].getPlayer();
+                tiles.push([row, column])
             }
 
-            return currentDiagonalWinner;
+            return tiles;
 
         }
 
@@ -97,6 +113,10 @@ export const GameController = (() => {
             let row=0;
             let column=0;
             let currentDiagonalWinner=board[row][column].getPlayer();
+            if (currentDiagonalWinner==null) { return null; }
+
+            let tiles=[]
+            tiles.push([row, column])
 
             // there are the same number of rows as columns
             for (let i=1; i<rows; i++) {
@@ -106,13 +126,20 @@ export const GameController = (() => {
                 if (currentDiagonalWinner!=board[row][column].getPlayer()) { return null; }
 
                 currentDiagonalWinner=board[row][column].getPlayer();
+                tiles.push([row, column])
             }
 
-            return currentDiagonalWinner;
+            return tiles;
 
         }
 
         function winner() {
+            const possibleWinner=winningCells()
+            const [row, column] = possibleWinner ? possibleWinner[0] : [];
+            return possibleWinner ? board[row][column].getPlayer() : null
+        }
+
+        function winningCells() {
             return _rowsWinner() || _columnsWinner() || _positiveDiagonalWinner() || _negativeDiagonalWinner();
         }
 
@@ -173,7 +200,7 @@ export const GameController = (() => {
             return { setPlayer, getPlayer, isFull, getSymbol };
         }
 
-        return { getBoard, printBoard, tryPlacePlayer, winner, isGameOver };
+        return { getBoard, printBoard, tryPlacePlayer, winner, winningCells, isGameOver };
 
     })();
 
@@ -213,6 +240,7 @@ export const GameController = (() => {
         playRound,
         getActivePlayer,
         winner: board.winner,
+        winningCells: board.winningCells,
         isGameOver: board.isGameOver,
 
         //used by tests:
@@ -233,8 +261,11 @@ export const DisplayController = (() => {
         const board = GameController.getBoard();
         const activePlayer = GameController.getActivePlayer();
 
-        // Display player's turn
-        playerTurnDiv.textContent = `${activePlayer.name}'s turn...`;
+        const winningCells=GameController.winningCells();
+        const winner=GameController.winner();
+
+        // Display the winner's name once there is one, otherwise the active player's turn
+        playerTurnDiv.textContent = winner ? `${winner.name} wins!` : `${activePlayer.name}'s turn...`;
 
         // Render board squares
         board.forEach((row, rowIndex) => {
@@ -242,6 +273,11 @@ export const DisplayController = (() => {
                 // Anything clickable should be a button!!
                 const cellButton = document.createElement("button");
                 cellButton.classList.add("cell");
+
+                if (winningCells?.some(([row, column]) => row === rowIndex && column === columnIndex))
+                {
+                    cellButton.classList.add("cell--line");
+                }
 
                 // Create a data attribute to identify the column
                 // This makes it easier to pass into our `playRound` function

@@ -16,9 +16,17 @@ body {
 
     font-size: 50px;
 
+    
+
 
     &:disabled {
         background-color: white;
         color: black;
+
+        &.cell--line {
+            background-color: red;
+        }
     }
+
+
 }
