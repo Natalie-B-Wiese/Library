@@ -30,3 +30,33 @@ body {
 
 
 }
+
+.stack {
+    display: flex;
+    flex-flow: column;
+    gap: 20px;
+    justify-content: center;
+    align-items: center;
+}
+
+.btn {
+    font-size: 24px;
+    padding: 10px 20px;
+    cursor: pointer;
+
+    &.btn--destructive {
+        background-color: red;
+        color: white;
+
+        &:hover {
+            background-color: rgb(255, 72, 72);
+            color: white;
+        }
+
+        /* when button is held down */
+        &:active {
+            background-color: rgb(134, 0, 0);
+            color: white;
+        }
+    }
+}

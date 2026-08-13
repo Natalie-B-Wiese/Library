@@ -22,6 +22,11 @@ function clickCell(row, column) {
     document.querySelector(`#board button[data-row="${row}"][data-column="${column}"]`).click();
 }
 
+// Clicks the restart button, mirroring a real user click.
+function clickRestart() {
+    document.querySelector("#restart").click();
+}
+
 // Coordinates are [row, column] pairs, matching the board's board[row][column] indexing.
 function expectSameCells(actualCells, expectedCells) {
     const normalize = (cells) => cells.map((cell) => JSON.stringify(cell)).sort();
@@ -443,5 +448,114 @@ describe("GameController.isGameOver", () => {
         GameController.playRound(2, 2); // playerOne
 
         expect(GameController.isGameOver()).toBe(true);
+    });
+});
+
+describe("GameController.restartGame", () => {
+    it("clears every cell on the board", () => {
+        GameController.playRound(0, 0);
+        GameController.playRound(1, 0);
+
+        GameController.restartGame();
+
+        GameController.getBoard().flat().forEach((cell) => {
+            expect(cell.isFull()).toBe(false);
+        });
+    });
+
+    it("resets the active player back to the first player", () => {
+        const firstPlayer = GameController.getActivePlayer();
+        GameController.playRound(0, 0); // switches to second player
+
+        GameController.restartGame();
+
+        expect(GameController.getActivePlayer()).toBe(firstPlayer);
+    });
+
+    it("clears the winner after a completed game", () => {
+        completeTopRow();
+        expect(GameController.winner()).not.toBeNull();
+
+        GameController.restartGame();
+
+        expect(GameController.winner()).toBeNull();
+    });
+
+    it("marks the game as no longer over after a completed game", () => {
+        completeTopRow();
+        expect(GameController.isGameOver()).toBe(true);
+
+        GameController.restartGame();
+
+        expect(GameController.isGameOver()).toBe(false);
+    });
+
+    it("allows moves to be played again after restarting", () => {
+        completeTopRow();
+        GameController.restartGame();
+
+        GameController.playRound(0, 0);
+
+        expect(GameController.getBoard()[0][0].isFull()).toBe(true);
+    });
+});
+
+describe("DisplayController restart button", () => {
+    it("clears the board display when clicked", () => {
+        clickCell(0, 0);
+        clickCell(1, 0);
+
+        clickRestart();
+
+        const cellButtons = document.querySelectorAll("#board button.cell");
+        cellButtons.forEach((button) => {
+            expect(button.textContent).toBe("");
+        });
+    });
+
+    it("re-enables every cell button after a completed game", () => {
+        // Mirrors completeTopRow(), but via clicks so the board re-renders through DisplayController.
+        clickCell(0, 0); // playerOne
+        clickCell(1, 0); // playerTwo
+        clickCell(0, 1); // playerOne
+        clickCell(1, 1); // playerTwo
+        clickCell(0, 2); // playerOne completes the top row
+
+        clickRestart();
+
+        const cellButtons = document.querySelectorAll("#board button.cell");
+        expect(cellButtons).toHaveLength(9);
+        cellButtons.forEach((button) => {
+            expect(button.disabled).toBe(false);
+        });
+    });
+
+    it("removes the winning-line class from every cell after a completed game", () => {
+        clickCell(0, 0); // playerOne
+        clickCell(1, 0); // playerTwo
+        clickCell(0, 1); // playerOne
+        clickCell(1, 1); // playerTwo
+        clickCell(0, 2); // playerOne completes the top row
+
+        clickRestart();
+
+        const markedCells = document.querySelectorAll("#board button.cell--line");
+        expect(markedCells).toHaveLength(0);
+    });
+
+    it("displays the first player's turn after a completed game", () => {
+        const playerOne = GameController.getActivePlayer();
+
+        clickCell(0, 0); // playerOne
+        clickCell(1, 0); // playerTwo
+        clickCell(0, 1); // playerOne
+        clickCell(1, 1); // playerTwo
+        clickCell(0, 2); // playerOne completes the top row
+
+        clickRestart();
+
+        const playerTurnDiv = document.querySelector("#turn");
+        expect(playerTurnDiv.textContent).toContain(playerOne.name);
+        expect(playerTurnDiv.textContent).not.toContain("wins");
     });
 });

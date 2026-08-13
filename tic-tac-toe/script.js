@@ -13,14 +13,20 @@ export const GameController = (() => {
 
         const getBoard = () => board;
 
-        // Create a 2d array that will represent the state of the game board
-        // Row 0 is top, and column 0 is left
-        for (let i = 0; i < rows; i++) {
-            board[i] = [];
-            for (let j = 0; j < columns; j++) {
-                board[i].push(Cell());
+        resetBoard();
+
+        function resetBoard() {
+            // Create a 2d array that will represent the state of the game board
+            // Row 0 is top, and column 0 is left
+            for (let i = 0; i < rows; i++) {
+                board[i] = [];
+                for (let j = 0; j < columns; j++) {
+                    board[i].push(Cell());
+                }
             }
         }
+
+        
 
         // returns a player if the player has won in the row, otherwise returns nil
         function _rowWinner(row) {
@@ -200,9 +206,14 @@ export const GameController = (() => {
             return { setPlayer, getPlayer, isFull, getSymbol };
         }
 
-        return { getBoard, printBoard, tryPlacePlayer, winner, winningCells, isGameOver };
+        return { getBoard, resetBoard, printBoard, tryPlacePlayer, winner, winningCells, isGameOver };
 
     })();
+
+    const restartGame = () => {
+        board.resetBoard();
+        activePlayer=players[0];
+    }
 
     const players=[_createPlayer("Player 1", "X"), _createPlayer("Player 2", "O")];
     let activePlayer = players[0];
@@ -239,6 +250,7 @@ export const GameController = (() => {
         winner: board.winner,
         winningCells: board.winningCells,
         isGameOver: board.isGameOver,
+        restartGame,
 
         //used by tests:
         getBoard: board.getBoard
@@ -249,6 +261,15 @@ export const GameController = (() => {
 export const DisplayController = (() => {
     const playerTurnDiv = document.querySelector("#turn");
     const boardDiv = document.querySelector("#board");
+    const restartButton=document.querySelector("#restart");
+
+    restartButton.addEventListener("click", clickHandlerRestart);
+
+    function clickHandlerRestart(e) {
+        GameController.restartGame();
+
+        updateScreen();
+    }
 
     const updateScreen = () => {
         // clear the board
