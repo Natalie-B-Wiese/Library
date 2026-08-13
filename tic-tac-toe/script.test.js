@@ -342,6 +342,41 @@ describe("DisplayController", () => {
         expect(playerTurnDiv.textContent).toContain(playerOne.name);
         expect(playerTurnDiv.textContent).not.toContain("turn");
     });
+
+    it("disables every cell button once a player has won", () => {
+        // Mirrors completeTopRow(), but via clicks so the board re-renders through DisplayController.
+        clickCell(0, 0); // playerOne
+        clickCell(1, 0); // playerTwo
+        clickCell(0, 1); // playerOne
+        clickCell(1, 1); // playerTwo
+        clickCell(0, 2); // playerOne completes the top row
+
+        const cellButtons = document.querySelectorAll("#board button.cell");
+
+        expect(cellButtons).toHaveLength(9);
+        cellButtons.forEach((button) => {
+            expect(button.disabled).toBe(true);
+        });
+    });
+
+    it("disables every cell button once the board is full without a winner", () => {
+        clickCell(0, 0); // playerOne
+        clickCell(1, 0); // playerTwo
+        clickCell(2, 0); // playerOne
+        clickCell(1, 1); // playerTwo
+        clickCell(0, 1); // playerOne
+        clickCell(2, 1); // playerTwo
+        clickCell(1, 2); // playerOne
+        clickCell(0, 2); // playerTwo
+        clickCell(2, 2); // playerOne
+
+        const cellButtons = document.querySelectorAll("#board button.cell");
+
+        expect(cellButtons).toHaveLength(9);
+        cellButtons.forEach((button) => {
+            expect(button.disabled).toBe(true);
+        });
+    });
 });
 
 describe("Cell.getSymbol", () => {

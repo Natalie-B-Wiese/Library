@@ -227,9 +227,6 @@ export const GameController = (() => {
 
         if (!board.tryPlacePlayer(column, row, getActivePlayer())) { return; }
 
-        /*  TODO: This is where we would check for a winner and handle that logic,
-            such as a win message. */
-
         // Switch player turn
         _switchPlayerTurn();
         _printNewRound();
@@ -263,6 +260,7 @@ export const DisplayController = (() => {
 
         const winningCells=GameController.winningCells();
         const winner=GameController.winner();
+        const gameOver=GameController.isGameOver();
 
         // Display the winner's name once there is one, otherwise the active player's turn
         playerTurnDiv.textContent = winner ? `${winner.name} wins!` : `${activePlayer.name}'s turn...`;
@@ -284,7 +282,7 @@ export const DisplayController = (() => {
                 cellButton.dataset.column = columnIndex;
                 cellButton.dataset.row = rowIndex;
 
-                if (cell.isFull())
+                if (cell.isFull() || gameOver)
                 {
                     cellButton.disabled=true;
                 }
