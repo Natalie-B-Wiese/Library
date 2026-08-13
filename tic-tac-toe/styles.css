@@ -4,6 +4,37 @@ body {
     align-items: center;
 }
 
+.footer {
+    width: 100%;
+    position: absolute;
+
+    bottom: 0px;
+    left: 0px;
+    background-color: rgb(149, 179, 255);
+    border-top: 2px solid blue;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 50px;
+    padding-block: 25px;
+}
+
+.name-fieldset {
+    display: flex;
+    flex-flow: column;
+    gap: 10px;
+    border: 1px solid white;
+    padding: 10px;
+    background-color: rgb(0, 0, 156);
+    color: white;
+
+    font-size: 16px;
+    input {
+        font-size: 18px;
+    }
+}
+
 .board {
     display: grid;
     grid-template-columns: repeat(3, 100px);

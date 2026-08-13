@@ -6,6 +6,10 @@ export const GameController = (() => {
         return {name: name, symbol: symbol}
     }
 
+    function setPlayerName(index, name) {
+        players[index].name=name;
+    }
+
     const board = (() => {
         const rows=3;
         const columns=3;
@@ -251,6 +255,7 @@ export const GameController = (() => {
         winningCells: board.winningCells,
         isGameOver: board.isGameOver,
         restartGame,
+        setPlayerName,
 
         //used by tests:
         getBoard: board.getBoard
@@ -262,6 +267,18 @@ export const DisplayController = (() => {
     const playerTurnDiv = document.querySelector("#turn");
     const boardDiv = document.querySelector("#board");
     const restartButton=document.querySelector("#restart");
+    const nameInputs=document.querySelectorAll("input[data-player-index]");
+
+    function clickHandlerNameBlur(e) {
+        const index = Number(e.target.dataset.playerIndex);
+        GameController.setPlayerName(index, e.target.value);
+        updateScreen();
+    }
+
+    nameInputs.forEach(nameInput => {
+        nameInput.addEventListener("blur", clickHandlerNameBlur);
+    })
+
 
     restartButton.addEventListener("click", clickHandlerRestart);
 

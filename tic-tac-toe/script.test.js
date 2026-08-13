@@ -27,6 +27,14 @@ function clickRestart() {
     document.querySelector("#restart").click();
 }
 
+// Types a new name into the given player's name input and blurs it,
+// mirroring a real user editing the field and clicking away.
+function changePlayerNameInput(playerIndex, newName) {
+    const input = document.querySelector(`input[data-player-index="${playerIndex}"]`);
+    input.value = newName;
+    input.dispatchEvent(new Event("blur"));
+}
+
 // Coordinates are [row, column] pairs, matching the board's board[row][column] indexing.
 function expectSameCells(actualCells, expectedCells) {
     const normalize = (cells) => cells.map((cell) => JSON.stringify(cell)).sort();
@@ -557,5 +565,154 @@ describe("DisplayController restart button", () => {
         const playerTurnDiv = document.querySelector("#turn");
         expect(playerTurnDiv.textContent).toContain(playerOne.name);
         expect(playerTurnDiv.textContent).not.toContain("wins");
+    });
+});
+
+describe("GameController.setPlayerName", () => {
+    it("renames the player at the given index", () => {
+        const [playerOne] = [GameController.getActivePlayer()];
+
+        GameController.setPlayerName(0, "Alice");
+
+        expect(playerOne.name).toBe("Alice");
+    });
+
+    it("does not rename the other player", () => {
+        GameController.playRound(0, 0); // switches active player to playerTwo
+        const playerTwo = GameController.getActivePlayer();
+
+        GameController.setPlayerName(0, "Alice");
+
+        expect(playerTwo.name).not.toBe("Alice");
+    });
+
+    it("renames the player at index 1", () => {
+        GameController.playRound(0, 0); // switches active player to playerTwo
+        const playerTwo = GameController.getActivePlayer();
+
+        GameController.setPlayerName(1, "Bob");
+
+        expect(playerTwo.name).toBe("Bob");
+    });
+
+    it("updates the name on cells the player has already placed on", () => {
+        GameController.playRound(0, 0); // playerOne places at (0,0)
+
+        GameController.setPlayerName(0, "Alice");
+
+        expect(GameController.getBoard()[0][0].getPlayer().name).toBe("Alice");
+    });
+});
+
+describe("DisplayController player name inputs", () => {
+    it("renders a name input for each player before any moves are made", () => {
+        const inputs = document.querySelectorAll("input[data-player-index]");
+
+        expect(inputs).toHaveLength(2);
+    });
+
+    it("pre-fills each input with that player's current name", () => {
+        const playerOneInput = document.querySelector('input[data-player-index="0"]');
+        const playerTwoInput = document.querySelector('input[data-player-index="1"]');
+
+        expect(playerOneInput.value).toBe("Player 1");
+        expect(playerTwoInput.value).toBe("Player 2");
+    });
+
+    it("updates the player's name in GameController when the player 1 input is blurred", () => {
+        changePlayerNameInput(0, "Alice");
+
+        expect(GameController.getActivePlayer().name).toBe("Alice");
+    });
+
+    it("updates the player's name in GameController when the player 2 input is blurred", () => {
+        GameController.playRound(0, 0); // switches active player to playerTwo
+        const playerTwo = GameController.getActivePlayer();
+
+        changePlayerNameInput(1, "Bob");
+
+        expect(playerTwo.name).toBe("Bob");
+    });
+
+    it("does not switch whose turn it is when a name is changed", () => {
+        const activePlayer = GameController.getActivePlayer();
+
+        changePlayerNameInput(0, "Alice");
+
+        expect(GameController.getActivePlayer()).toBe(activePlayer);
+    });
+
+    it("updates the turn text when the active player's name is changed", () => {
+        // playerOne is active by default
+        changePlayerNameInput(0, "Alice");
+
+        const playerTurnDiv = document.querySelector("#turn");
+        expect(playerTurnDiv.textContent).toContain("Alice");
+    });
+
+    it("does not update the turn text when the inactive player's name is changed", () => {
+        // playerOne is active by default; playerTwo is inactive
+        changePlayerNameInput(1, "Bob");
+
+        const playerTurnDiv = document.querySelector("#turn");
+        expect(playerTurnDiv.textContent).not.toContain("Bob");
+    });
+
+    it("reflects a name change made mid-game once it becomes that player's turn again", () => {
+        clickCell(0, 0); // playerOne moves, playerTwo becomes active
+        changePlayerNameInput(0, "Alice"); // rename playerOne while they are inactive
+        clickCell(1, 0); // playerTwo moves, playerOne becomes active again
+
+        const playerTurnDiv = document.querySelector("#turn");
+        expect(playerTurnDiv.textContent).toContain("Alice");
+    });
+
+    it("updates the winner text if the winning player's name is changed after they win", () => {
+        completeTopRow(); // playerOne wins
+
+        changePlayerNameInput(0, "Alice");
+
+        const playerTurnDiv = document.querySelector("#turn");
+        expect(playerTurnDiv.textContent).toContain("Alice");
+        expect(playerTurnDiv.textContent).toContain("wins");
+    });
+
+    it("keeps the name inputs enabled once the game is over", () => {
+        completeTopRow();
+
+        const inputs = document.querySelectorAll("input[data-player-index]");
+        inputs.forEach((input) => {
+            expect(input.disabled).toBe(false);
+        });
+    });
+
+    it("does not clear an in-progress edit when the board re-renders from an unrelated move", () => {
+        const playerTwoInput = document.querySelector('input[data-player-index="1"]');
+        playerTwoInput.value = "Bo"; // simulate mid-typing, not yet blurred
+
+        clickCell(0, 0); // triggers a re-render via an unrelated move
+
+        expect(document.querySelector('input[data-player-index="1"]').value).toBe("Bo");
+    });
+
+    it("keeps custom names after restarting the game", () => {
+        changePlayerNameInput(0, "Alice");
+        changePlayerNameInput(1, "Bob");
+
+        clickRestart();
+
+        expect(GameController.getActivePlayer().name).toBe("Alice");
+        const playerTurnDiv = document.querySelector("#turn");
+        expect(playerTurnDiv.textContent).toContain("Alice");
+    });
+
+    it("keeps the custom name displayed in the inputs after restarting the game", () => {
+        changePlayerNameInput(0, "Alice");
+        changePlayerNameInput(1, "Bob");
+
+        clickRestart();
+
+        expect(document.querySelector('input[data-player-index="0"]').value).toBe("Alice");
+        expect(document.querySelector('input[data-player-index="1"]').value).toBe("Bob");
     });
 });
