@@ -1,8 +1,49 @@
-let myLibrary = [];
+class Book {
+    constructor(title, author, length, isRead) {
+        this.id=crypto.randomUUID();
+        
+        this.title=title;
+        this.author=author;
+        this.length=length;
+        this.isRead=isRead;
+    }
 
-myLibrary.push(new Book("The Hobbit", "J.R.R Tolkien", 295, false));
-myLibrary.push(new Book("The Lord of the Rings", "J.R.R Tolkien", 1178, false));
-myLibrary.push(new Book("Pride and Prejudice", "Jane Austin", 432, false));
+    get info() {
+        let returnValue=`${this.title} by ${this.author}, ${this.length} pages `;
+        returnValue+= this.isRead ? "read" : "not read yet";
+        return returnValue;
+    }
+
+    toggleRead() {
+        this.isRead=!this.isRead;
+    }
+}
+
+class Library {
+    constructor() {
+        this.books=[];
+    }
+
+    addBook(book) {
+        this.books.push(book);
+    }
+
+    findBook(id) {
+        return this.books.find(book => book.id === id);
+
+    }
+
+    deleteBook(id) {
+        this.books=this.books.filter(book => book.id !== id);
+    }
+}
+
+let myLibrary = new Library();
+
+
+myLibrary.addBook(new Book("The Hobbit", "J.R.R Tolkien", 295, false));
+myLibrary.addBook(new Book("The Lord of the Rings", "J.R.R Tolkien", 1178, false));
+myLibrary.addBook(new Book("Pride and Prejudice", "Jane Austin", 432, false));
 
 
 window.addEventListener('load', () => {
@@ -18,32 +59,14 @@ form.addEventListener('submit', (event) => {
     addBookToLibrary(formValues);
 });
 
-function Book(title, author, length, isRead) {
-    this.id=crypto.randomUUID();
-    
-    this.title=title;
-    this.author=author;
-    this.length=length;
-    this.isRead=isRead;
-
-    this.info=function() {
-        let returnValue=`${this.title} by ${this.author}, ${this.length} pages `;
-        returnValue+= this.isRead ? "read" : "not read yet";
-        return returnValue;
-    }
-}
-
-Book.prototype.toggleRead = function() {
-    this.isRead=!this.isRead;
-};
-
-function addBookToLibrary(params) {
-  // take params, create a book then store it in the array
+function bookFromParams(params) {
     const wasRead='was-read' in params;
     const pageCount=Number(params["book-length"]);
+    return new Book(params["book-title"], params["book-author"], pageCount, wasRead);
+}
 
-    newBook = new Book(params["book-title"], params["book-author"], pageCount, wasRead);
-    myLibrary.push(newBook);
+function addBookToLibrary(params) {
+    myLibrary.addBook(bookFromParams(params));
     displayBooks();
 }
 
@@ -62,7 +85,7 @@ function displayBooks()
     bookContainer.replaceChildren();
 
     //regenerates all the books on the page
-    myLibrary.forEach((book, index) => {
+    myLibrary.books.forEach((book, index) => {
         const deleteButton=createDeleteButton();
         const bookDiv=createBookDiv(book);
         const readButton=createReadButton();
@@ -76,19 +99,14 @@ function displayBooks()
 
 function onDeleteButtonPressed(event) {
     id=event.target.parentElement.dataset.indexNumber;
-    deleteBookWithID(id);
+    myLibrary.deleteBook(id);
+    displayBooks();
 }
 
 function onToggleReadButtonPressed(event) {
     id=event.target.parentElement.dataset.indexNumber;
-    book=myLibrary.find(book => book.id === id);
+    book=myLibrary.findBook(id);
     book.toggleRead();
-    displayBooks();
-}
-
-function deleteBookWithID(id)
-{
-    myLibrary=myLibrary.filter(book => book.id !== id);
     displayBooks();
 }
 
@@ -115,6 +133,6 @@ function createBookDiv(book, deleteButton)
 {
     const bookDiv=document.createElement("div");
     bookDiv.dataset.indexNumber=book.id;
-    bookDiv.textContent = book.info();
+    bookDiv.textContent = book.info;
     return bookDiv;
 }
